@@ -1,0 +1,20 @@
+To deploy this on Vercel, share/provide these:
+
+Git repo
+GitHub/GitLab/Bitbucket repo URL with this project pushed.
+Vercel access
+Either invite me to the Vercel project/team, or you deploy and I give exact settings.
+Build settings (likely default)
+Framework: Vite
+Build command: npm run build
+Output directory: dist
+Environment variables (only if backend/DB is used)
+Right now your app is frontend + local browser storage, so no DB is required.
+If you want Neon/Postgres storage, then provide:
+DATABASE_URL (pooled connection string)
+Optional direct URL for migrations: DIRECT_URL
+Any auth secrets (if adding login), e.g. JWT_SECRET, NEXTAUTH_SECRET, etc.
+Domain (optional)
+Custom domain name if you want production URL on your domain.
+Runtime extras (if applicable)
+If adding server/API routes later: required API keys (email/SMS providers, etc.).

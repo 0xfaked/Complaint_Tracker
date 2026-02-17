@@ -1,0 +1,35 @@
+{
+  "syncedAt": "2026-02-17T05:58:52.275Z",
+  "complaints": [
+    {
+      "complaintId": "UMC00252",
+      "complaintName": "Garbage is getting burned.",
+      "description": "Garbage is getting burned.",
+      "dateLodged": "2026-02-12",
+      "status": "Pending",
+      "department": "Public Health Department/Sanitation Department",
+      "expectedResponseDate": "",
+      "notes": "Ulhasnagar"
+    },
+    {
+      "complaintId": "UMC00249",
+      "complaintName": "water pollution in gavki talav varap",
+      "description": "water pollution in gavki talav varap",
+      "dateLodged": "2026-02-11",
+      "status": "Pending",
+      "department": "Water Supply Department",
+      "expectedResponseDate": "",
+      "notes": "Ulhasnagar"
+    },
+    {
+      "complaintId": "UMC00248",
+      "complaintName": "Dust pollution cause of Unclean roads.",
+      "description": "Dust pollution cause of Unclean roads.",
+      "dateLodged": "2026-02-11",
+      "status": "Rejected",
+      "department": "Public Health Department/Sanitation Department",
+      "expectedResponseDate": "",
+      "notes": "Ulhasnagar"
+    }
+  ]
+}
