@@ -35,6 +35,33 @@ function formatShortDate(d: Date) {
   return format(d, 'MMM d')
 }
 
+function platformLabel(portalName?: string) {
+  const source = portalName?.trim() ?? ''
+  if (!source) return '-'
+  const normalized = source.toLowerCase()
+  if (
+    normalized.includes('smart_umc_grievances') ||
+    normalized.includes('umc_smartgrievance') ||
+    normalized.includes('umc_grievances')
+  ) {
+    return 'UMC'
+  }
+  return source
+}
+
+function overdueBadgeClass(daysLate: number) {
+  if (daysLate >= 90) return 'border-red-700 bg-red-950 text-red-100'
+  if (daysLate >= 30) return 'border-rose-700 bg-rose-950 text-rose-100'
+  return 'border-orange-700 bg-orange-950 text-orange-100'
+}
+
+function upcomingBadge(until: number) {
+  if (until === 0) return { label: 'Today', className: 'border-red-700 bg-red-950 text-red-100' }
+  if (until === 1) return { label: 'Tomorrow', className: 'border-amber-700 bg-amber-950 text-amber-100' }
+  if (until <= 3) return { label: `${until}d left`, className: 'border-yellow-700 bg-yellow-900 text-yellow-100' }
+  return { label: `${until}d left`, className: 'border-blue-700 bg-blue-950 text-blue-100' }
+}
+
 export function DashboardPage() {
   const complaints = useComplaintsStore((s) => s.complaints)
   const smartUmcTotal = useMemo(
@@ -125,7 +152,9 @@ export function DashboardPage() {
 
     const overdue = items.filter((x) => (x.until as number) < 0).slice(0, 5)
     const upcoming = items.filter((x) => (x.until as number) >= 0 && (x.until as number) <= 7).slice(0, 5)
-    return { overdue, upcoming }
+    const dueIn48h = items.filter((x) => (x.until as number) >= 0 && (x.until as number) <= 2).length
+    const dueIn7d = items.filter((x) => (x.until as number) >= 0 && (x.until as number) <= 7).length
+    return { overdue, upcoming, dueIn48h, dueIn7d }
   }, [complaints])
 
   return (
@@ -277,13 +306,28 @@ export function DashboardPage() {
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle>Deadlines & Alerts</CardTitle>
-              <CardDescription>Overdue (red) and due within 7 days.</CardDescription>
+              <CardDescription>Priority queue for overdue and next 7-day deadlines.</CardDescription>
             </div>
             <Button variant="outline" asChild>
               <a href="/complaints">Open list</a>
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="rounded-xl border border-red-800/60 bg-red-950/50 p-3">
+                <div className="text-[11px] uppercase tracking-wide text-red-200/90">Overdue</div>
+                <div className="text-xl font-semibold text-red-100">{alertItems.overdue.length}</div>
+              </div>
+              <div className="rounded-xl border border-amber-800/60 bg-amber-950/45 p-3">
+                <div className="text-[11px] uppercase tracking-wide text-amber-200/90">Due in 48h</div>
+                <div className="text-xl font-semibold text-amber-100">{alertItems.dueIn48h}</div>
+              </div>
+              <div className="rounded-xl border border-blue-800/60 bg-blue-950/45 p-3">
+                <div className="text-[11px] uppercase tracking-wide text-blue-200/90">Due in 7d</div>
+                <div className="text-xl font-semibold text-blue-100">{alertItems.dueIn7d}</div>
+              </div>
+            </div>
+
             {alertItems.overdue.length === 0 && alertItems.upcoming.length === 0 ? (
               <div className="text-sm text-muted-foreground">No upcoming deadlines.</div>
             ) : null}
@@ -293,16 +337,21 @@ export function DashboardPage() {
                 <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Overdue
                 </div>
-                {alertItems.overdue.map(({ c, until }) => (
+                {alertItems.overdue.map(({ c, until, due }) => (
                   <div
                     key={c.id}
                     className="flex items-start justify-between gap-3 rounded-xl border bg-background/60 p-3"
                   >
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium">{c.complaintId}</div>
-                      <div className="truncate text-xs text-muted-foreground">{c.portalName}</div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {platformLabel(c.portalName)} • {c.complaintName || 'No title'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Due {due ? format(due, 'yyyy-MM-dd') : 'N/A'}
+                      </div>
                     </div>
-                    <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    <Badge className={overdueBadgeClass(Math.abs(until as number))}>
                       {Math.abs(until as number)}d late
                     </Badge>
                   </div>
@@ -315,16 +364,23 @@ export function DashboardPage() {
                 <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Upcoming
                 </div>
-                {alertItems.upcoming.map(({ c, until }) => (
+                {alertItems.upcoming.map(({ c, until, due }) => (
                   <div
                     key={c.id}
                     className="flex items-start justify-between gap-3 rounded-xl border bg-background/60 p-3"
                   >
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium">{c.complaintId}</div>
-                      <div className="truncate text-xs text-muted-foreground">{c.portalName}</div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {platformLabel(c.portalName)} • {c.complaintName || 'No title'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Due {due ? format(due, 'yyyy-MM-dd') : 'N/A'}
+                      </div>
                     </div>
-                    <Badge variant="secondary">{until}d</Badge>
+                    <Badge className={upcomingBadge(until as number).className}>
+                      {upcomingBadge(until as number).label}
+                    </Badge>
                   </div>
                 ))}
               </div>

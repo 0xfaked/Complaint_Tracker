@@ -1,5 +1,6 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,48 @@ import type { ComplaintStatus } from '@/types/complaint'
 
 const platformOptions = ['RTI', 'PGPortal', 'Maha_Grievances', 'Smart_UMC_Grievances', 'UMC_Grievances'] as const
 const statusOptions: ComplaintStatus[] = ['Submitted', 'Transfered', 'Assigned', 'In Progress', 'Closed', 'Resolved']
+
+const platformColorMap: Array<{ match: string; className: string }> = [
+  { match: 'RTI', className: 'border-cyan-700 bg-cyan-950 text-cyan-100' },
+  { match: 'PGPortal', className: 'border-blue-700 bg-blue-950 text-blue-100' },
+  { match: 'Maha_Grievances', className: 'border-violet-700 bg-violet-950 text-violet-100' },
+  { match: 'Smart_UMC_Grievances', className: 'border-amber-700 bg-amber-950 text-amber-100' },
+  { match: 'UMC_Grievances', className: 'border-orange-700 bg-orange-950 text-orange-100' },
+]
+
+const statusColorMap: Record<ComplaintStatus, string> = {
+  Filed: 'border-blue-700 bg-blue-950 text-blue-100',
+  Submitted: 'border-sky-700 bg-sky-950 text-sky-100',
+  Pending: 'border-yellow-700 bg-yellow-900 text-yellow-100',
+  Transfered: 'border-indigo-700 bg-indigo-950 text-indigo-100',
+  Assigned: 'border-orange-700 bg-orange-950 text-orange-100',
+  'In Progress': 'border-amber-700 bg-amber-950 text-amber-100',
+  'First Appeal': 'border-fuchsia-700 bg-fuchsia-950 text-fuchsia-100',
+  'Second Appeal': 'border-purple-700 bg-purple-950 text-purple-100',
+  Closed: 'border-red-700 bg-red-950 text-red-100',
+  Resolved: 'border-emerald-700 bg-emerald-950 text-emerald-100',
+}
+
+function getPlatformBadgeClass(portalName?: string): string {
+  const source = portalName?.trim() ?? ''
+  if (!source) return 'border-slate-700 bg-slate-900 text-slate-100'
+  const hit = platformColorMap.find((item) => source === item.match || source.includes(item.match))
+  return hit?.className ?? 'border-slate-700 bg-slate-900 text-slate-100'
+}
+
+function getPlatformDisplayName(portalName?: string): string {
+  const source = portalName?.trim() ?? ''
+  if (!source) return '-'
+  const normalized = source.toLowerCase()
+  if (
+    normalized.includes('smart_umc_grievances') ||
+    normalized.includes('umc_smartgrievance') ||
+    normalized.includes('umc_grievances')
+  ) {
+    return 'UMC'
+  }
+  return source
+}
 const pgPortalSeedData = [
   {
     complaintId: 'MORTH/E/2025/0027899',
@@ -132,7 +175,7 @@ const rtiSeedData = [
     portalName: 'RTI Online',
     category: 'RTI' as const,
     description:
-      'Gram Panchayat Punevadi, Taluka Parner, District Ahilyanagar: à¤•à¥ƒà¤ªà¤¯à¤¾ 2022-2025 à¤¯à¤¾ à¤•à¤¾à¤²à¤¾à¤µà¤§à¥€à¤¤ à¤¹à¤¾à¤¤à¥€ à¤˜à¥‡à¤¤à¤²à¥‡à¤²à¥à¤¯à¤¾ à¤¸à¤°à¥à¤µ à¤°à¤¸à¥à¤¤à¥‡ à¤¬à¤¾à¤‚à¤§à¤•à¤¾à¤®, à¤°à¤¸à¥à¤¤à¥à¤¯à¤¾à¤µà¤°à¥€à¤² à¤¦à¤¿à¤µà¤¾à¤¬à¤¤à¥à¤¤à¥€ à¤†à¤£à¤¿ à¤¸à¤¾à¤°à¥à¤µà¤œà¤¨à¤¿à¤• à¤¶à¥Œà¤šà¤¾à¤²à¤¯ à¤•à¤¾à¤®à¤¾à¤‚à¤šà¤¾ à¤¸à¤‚à¤ªà¥‚à¤°à¥à¤£ à¤¤à¤ªà¤¶à¥€à¤² à¤¦à¥à¤¯à¤¾à¤µà¤¾, à¤œà¥à¤¯à¤¾à¤®à¤§à¥à¤¯à¥‡ à¤®à¤‚à¤œà¥‚à¤° à¤°à¤•à¥à¤•à¤®, à¤–à¤°à¥à¤š, à¤•à¤‚à¤¤à¥à¤°à¤¾à¤Ÿà¤¦à¤¾à¤° à¤¤à¤ªà¤¶à¥€à¤², à¤•à¤¾à¤® à¤†à¤¦à¥‡à¤¶, à¤ªà¥‚à¤°à¥à¤£à¤¤à¤¾ à¤¸à¥à¤¥à¤¿à¤¤à¥€, à¤¯à¥‹à¤œà¤¨à¤¾ à¤¸à¥à¤°à¥‹à¤¤, à¤¤à¤ªà¤¾à¤¸à¤£à¥€ à¤…à¤¹à¤µà¤¾à¤² à¤†à¤£à¤¿ à¤¸à¤‚à¤¬à¤‚à¤§à¤¿à¤¤ à¤•à¤¾à¤—à¤¦à¤ªà¤¤à¥à¤°à¤¾à¤‚à¤šà¥à¤¯à¤¾ à¤ªà¥à¤°à¤¤à¥€à¤‚à¤šà¤¾ à¤¸à¤®à¤¾à¤µà¥‡à¤¶ à¤†à¤¹à¥‡.',
+      'Gram Panchayat Punevadi, Taluka Parner, District Ahilyanagar: कृपया 2022-2025 या कालावधीत हाती घेतलेल्या सर्व रस्ते बांधकाम, रस्त्यावरील दिवाबत्ती आणि सार्वजनिक शौचालय कामांचा संपूर्ण तपशील द्यावा, ज्यामध्ये मंजूर रक्कम, खर्च, कंत्राटदार तपशील, काम आदेश, पूर्णता स्थिती, योजना स्रोत, तपासणी अहवाल आणि संबंधित कागदपत्रांच्या प्रतींचा समावेश आहे.',
     dateLodged: '2026-02-14',
     status: 'Submitted' as ComplaintStatus,
     department: 'Zilla Parishad, Ahmednagar',
@@ -146,7 +189,7 @@ const rtiSeedData = [
     portalName: 'RTI Online',
     category: 'RTI' as const,
     description:
-      'TO Gram Panchayat Punevadi, Parner Taluka, Ahilyanagar: à¤†à¤°à¥à¤¥à¤¿à¤• à¤µà¤°à¥à¤· 2023-24, 2024-25 à¤†à¤£à¤¿ 2025-26 à¤®à¤§à¥€à¤² à¤¸à¤°à¥à¤µ à¤µà¤¿à¤•à¤¾à¤¸ à¤•à¤¾à¤®à¤¾à¤‚à¤šà¤¾ à¤¸à¤µà¤¿à¤¸à¥à¤¤à¤° à¤¤à¤ªà¤¶à¥€à¤² à¤¦à¥à¤¯à¤¾à¤µà¤¾, à¤œà¥à¤¯à¤¾à¤®à¤§à¥à¤¯à¥‡ à¤•à¤¾à¤®à¤¾à¤šà¥‡ à¤¨à¤¾à¤µ/à¤ à¤¿à¤•à¤¾à¤£/à¤¶à¥à¤°à¥‡à¤£à¥€, à¤®à¤‚à¤œà¥‚à¤° à¤†à¤£à¤¿ à¤ªà¥à¤°à¤¤à¥à¤¯à¤•à¥à¤· à¤–à¤°à¥à¤š, à¤•à¤‚à¤¤à¥à¤°à¤¾à¤Ÿà¤¦à¤¾à¤° à¤•à¤¿à¤‚à¤µà¤¾ à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¥à¤¯à¤¾à¤‚à¤šà¥€ à¤¨à¤¾à¤µà¥‡, à¤¸à¥à¤°à¥à¤µà¤¾à¤¤ à¤¤à¤¾à¤°à¥€à¤–, à¤ªà¥‚à¤°à¥à¤£à¤¤à¤¾ à¤¤à¤¾à¤°à¥€à¤– (à¤•à¤¿à¤‚à¤µà¤¾ à¤…à¤ªà¥‡à¤•à¥à¤·à¤¿à¤¤ à¤ªà¥‚à¤°à¥à¤£à¤¤à¤¾ à¤¤à¤¾à¤°à¥€à¤–) à¤†à¤£à¤¿ à¤¸à¤§à¥à¤¯à¤¾à¤šà¥€ à¤¸à¥à¤¥à¤¿à¤¤à¥€ à¤¯à¤¾à¤‚à¤šà¤¾ à¤¸à¤®à¤¾à¤µà¥‡à¤¶ à¤†à¤¹à¥‡.',
+      'TO Gram Panchayat Punevadi, Parner Taluka, Ahilyanagar: आर्थिक वर्ष 2023-24, 2024-25 आणि 2025-26 मधील सर्व विकास कामांचा सविस्तर तपशील द्यावा, ज्यामध्ये कामाचे नाव/ठिकाण/श्रेणी, मंजूर आणि प्रत्यक्ष खर्च, कंत्राटदार किंवा विक्रेत्यांची नावे, सुरुवात तारीख, पूर्णता तारीख (किंवा अपेक्षित पूर्णता तारीख) आणि सध्याची स्थिती यांचा समावेश आहे.',
     dateLodged: '2026-02-10',
     status: 'Submitted' as ComplaintStatus,
     department: 'Zilla Parishad, Ahmednagar',
@@ -180,6 +223,9 @@ export function ComplaintsPage() {
   const [showForm, setShowForm] = useState(false)
   const [openComplaintId, setOpenComplaintId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [importPayload, setImportPayload] = useState('')
+  const [importMessage, setImportMessage] = useState('')
+  const [importError, setImportError] = useState('')
   const [editStatusById, setEditStatusById] = useState<Record<string, string>>({})
   const [editDueDateById, setEditDueDateById] = useState<Record<string, string>>({})
   const complaints = useComplaintsStore((s) => s.complaints)
@@ -229,6 +275,66 @@ export function ComplaintsPage() {
     setShowForm(false)
   }
 
+  function normalizeISODate(value: unknown): string {
+    const asText = typeof value === 'string' ? value.trim() : ''
+    if (!asText) return ''
+    const dateOnly = asText.match(/^(\d{4}-\d{2}-\d{2})$/)
+    if (dateOnly) return dateOnly[1]
+    const parsed = new Date(asText)
+    if (Number.isNaN(parsed.getTime())) return ''
+    return parsed.toISOString().slice(0, 10)
+  }
+
+  function readString(source: Record<string, unknown>, keys: string[]): string {
+    for (const key of keys) {
+      const value = source[key]
+      if (typeof value === 'string' && value.trim()) return value.trim()
+    }
+    return ''
+  }
+
+  function fillFormFromPayload() {
+    setImportError('')
+    setImportMessage('')
+    try {
+      const parsed: unknown = JSON.parse(importPayload)
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        setImportError('JSON must be a single object.')
+        return
+      }
+      const source = parsed as Record<string, unknown>
+
+      const nextPlatform = readString(source, ['platform', 'portalName', 'portal', 'source'])
+      const nextStatus = readString(source, ['status'])
+      const registeredDate = normalizeISODate(
+        readString(source, ['registeredDate', 'dateLodged', 'complaintDate', 'createdAt', 'date']),
+      )
+      const dueDate = normalizeISODate(
+        readString(source, ['dueDate', 'expectedResponseDate', 'deadline', 'expectedDate']),
+      )
+
+      setForm((prev) => ({
+        ...prev,
+        complaintName: readString(source, ['complaintName', 'name', 'title', 'subject']) || prev.complaintName,
+        registrationNo:
+          readString(source, ['registrationNo', 'complaintId', 'referenceNo', 'ticketId']) || prev.registrationNo,
+        platform: platformOptions.includes(nextPlatform as (typeof platformOptions)[number]) ? nextPlatform : prev.platform,
+        status: statusOptions.includes(nextStatus as ComplaintStatus) ? nextStatus : prev.status,
+        registeredDate: registeredDate || prev.registeredDate,
+        place: readString(source, ['place', 'location', 'notes', 'address']) || prev.place,
+        department: readString(source, ['department', 'departmentName', 'office']) || prev.department,
+        dueDate: dueDate || prev.dueDate,
+        officeEmail: readString(source, ['officeEmail', 'email', 'contactEmail']) || prev.officeEmail,
+        officePhone: readString(source, ['officePhone', 'phone', 'contactPhone']) || prev.officePhone,
+        description: readString(source, ['description', 'details', 'body', 'message']) || prev.description,
+      }))
+
+      setImportMessage('Form fields updated from JSON.')
+    } catch {
+      setImportError('Invalid JSON. Please paste a valid JSON object.')
+    }
+  }
+
   function saveEdits(id: string) {
     const nextStatus = editStatusById[id]
     const nextDue = editDueDateById[id]
@@ -268,6 +374,23 @@ export function ComplaintsPage() {
             <CardDescription>Enter complaint details.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="form-json-input">Paste Complaint JSON</Label>
+              <div className="flex flex-col gap-2 md:flex-row">
+                <Textarea
+                  id="form-json-input"
+                  className="min-h-[130px] md:flex-1"
+                  placeholder='{"complaintName":"Road damage","registrationNo":"MORTH/E/2026/001","platform":"PGPortal","status":"Submitted","registeredDate":"2026-02-18","department":"PWD","place":"Kalyan, Thane","dueDate":"2026-03-20","officeEmail":"office@example.com","officePhone":"+91-9000000000","description":"Road is damaged near bridge."}'
+                  value={importPayload}
+                  onChange={(e) => setImportPayload(e.target.value)}
+                />
+                <Button type="button" className="md:self-start" onClick={fillFormFromPayload}>
+                  Auto Fill
+                </Button>
+              </div>
+              {importError ? <p className="text-sm text-red-600">{importError}</p> : null}
+              {!importError && importMessage ? <p className="text-sm text-emerald-700">{importMessage}</p> : null}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="complaint-name">Complaint Name</Label>
               <Input
@@ -413,8 +536,10 @@ export function ComplaintsPage() {
                   <div className="grid grid-cols-1 gap-2 p-4 text-[15px] font-semibold text-foreground md:grid-cols-[1fr_2fr_1.2fr_1.2fr_2fr_auto] md:items-center">
                     <p>{index + 1}</p>
                     <p>{item.complaintName || item.description || '-'}</p>
-                    <p>{item.portalName || '-'}</p>
-                    <p>{item.status || '-'}</p>
+                    <Badge className={`w-fit ${getPlatformBadgeClass(item.portalName)}`}>{getPlatformDisplayName(item.portalName)}</Badge>
+                    <Badge className={`w-fit ${statusColorMap[item.status] ?? 'border-slate-200 bg-slate-100 text-slate-700'}`}>
+                      {item.status || '-'}
+                    </Badge>
                     <p className="truncate">{item.notes || '-'}</p>
                     <p className="text-xl leading-none">{openComplaintId === item.id ? '-' : '+'}</p>
                   </div>
@@ -424,9 +549,17 @@ export function ComplaintsPage() {
                   <div className="grid grid-cols-1 gap-2 border-t px-4 py-3 text-sm md:grid-cols-2">
                     <p><strong>Complaint Name:</strong> {item.complaintName || '-'}</p>
                     <p><strong>Registration No.:</strong> {item.complaintId || '-'}</p>
-                    <p><strong>Platform:</strong> {item.portalName || '-'}</p>
+                    <p>
+                      <strong>Platform:</strong>{' '}
+                      <Badge className={`ml-1 inline-flex ${getPlatformBadgeClass(item.portalName)}`}>{getPlatformDisplayName(item.portalName)}</Badge>
+                    </p>
                     <div className="space-y-1">
-                      <p><strong>Status:</strong></p>
+                      <p>
+                        <strong>Status:</strong>{' '}
+                        <Badge className={`ml-1 inline-flex ${statusColorMap[item.status] ?? 'border-slate-200 bg-slate-100 text-slate-700'}`}>
+                          {item.status || '-'}
+                        </Badge>
+                      </p>
                       <Select
                         value={editStatusById[item.id] ?? item.status}
                         onValueChange={(value) =>
@@ -479,4 +612,5 @@ export function ComplaintsPage() {
     </div>
   )
 }
+
 
